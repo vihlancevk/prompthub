@@ -7,7 +7,6 @@ require (
 	github.com/go-chi/cors v1.2.2
 	github.com/go-chi/render v1.0.3
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 )

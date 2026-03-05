@@ -17,7 +17,7 @@ migrate-down: setup-migrate
 	GOOSE_DRIVER=postgres GOOSE_DBSTRING=$(DATABASE_URL) GOOSE_MIGRATION_DIR=$(GOOSE_MIGRATION_DIR) goose down
 
 build:
-	go build -v -o prompthub ./
+	go build -v -o prompthub ./cmd/prompthub/
 
 run: build
 	PGUSER=$(DATABASE_USER) PGPASSWORD=$(DATABASE_PASSWORD) PROMPTHUB_DATABASE_URL=$(DATABASE_URL) ./prompthub -v 2

@@ -13,7 +13,7 @@ PromptHub is a full-stack application that serves a collection of ready-made NLP
 ```sh
 make migrate-up     # Apply DB migrations (requires .env with DATABASE_* vars)
 make migrate-down   # Rollback last migration
-make build          # Compile Go binary → ./prompthub
+make build          # Compile Go binary → ./prompthub (entry: cmd/prompthub/main.go)
 make run            # Build + run server on :8000
 make test           # Run all Go tests
 make clean          # Remove binary and test cache
@@ -37,21 +37,19 @@ Run `make run` (backend on :8000) and `npm run dev` simultaneously — the Vite 
 
 ### Backend (Go)
 
-Three internal packages under the module `rnditb2c/prompthub`:
+Entry point: `cmd/prompthub/main.go`. Three internal packages under `internal/`:
 
-- **`index/`** — Database layer. `index.Init()` opens a pgxpool connection stored in a package-level variable. `GetPrompts`, `GetPrompt`, `GetCard` are the only public query functions.
-- **`api/`** — HTTP layer using chi router. `api.Serve()` wires up routes, middleware (CORS, body limit, content-type), and handles graceful shutdown on SIGINT.
-- **`output/`** — Leveled logging (FATAL, ERROR, INFO, DEBUG) initialized by `output.Init(verbosity)`.
-
-Config is managed by Viper, which reads `prompthub.yaml` and env vars prefixed with `PROMPTHUB_`. The database URL is passed via `PROMPTHUB_DATABASE_URL` or built from `.env` vars by the Makefile.
+- **`internal/config/`** — `config.Load()` reads `prompthub.yaml` and env vars (prefix `PROMPTHUB_`) via Viper. Returns a typed `Config` struct. A missing config file is not fatal; env vars and defaults suffice.
+- **`internal/store/`** — Database layer. `store.New()` opens a pgxpool connection. Methods: `GetPrompts`, `GetPrompt`, `GetCard`. Returns `store.ErrNotFound` when a record is absent.
+- **`internal/api/`** — HTTP layer. `Server` struct holds `*store.Store` as a dependency (constructor injection via `api.NewServer`). Routes and middleware are in `server.go`; handlers are in `handlers.go`. Uses structured logging via `log/slog`.
 
 ### API Routes
 
 | Method | Path | Handler |
 |--------|------|---------|
-| GET | `/prompts` | `ListPrompts` — returns all prompts as JSON array |
-| GET | `/prompts/{name}` | `GetPrompt` — returns single prompt by name |
-| GET | `/cards/{name}` | `GetCard` — returns prompt card as plain text |
+| GET | `/prompts` | `listPrompts` — returns all prompts as JSON array |
+| GET | `/prompts/{name}` | `getPrompt` — returns single prompt by name |
+| GET | `/cards/{name}` | `getCard` — returns prompt card as plain text |
 
 Prompt names can contain slashes (e.g., `rnditb2c/idea-generator`); routing uses chi's wildcard `/*`.
 
@@ -85,7 +83,12 @@ CREATE TABLE prompts (
 `prompthub.yaml` (copy from `prompthub.yaml.example`):
 - `port` — HTTP listen port (default: `"8000"`)
 - `allowed_origins` — CORS allowed origins list
+- `database_url` — PostgreSQL DSN
 
 `.env` (copy from `.env.example`) — PostgreSQL credentials used by the Makefile to construct `DATABASE_URL`.
 
 All config keys can be overridden with `PROMPTHUB_<KEY>` environment variables.
+
+### Logging
+
+Uses Go's standard `log/slog`. Verbosity is set via `-v` flag: `0` = errors only, `1` = info (default), `2` = debug.
