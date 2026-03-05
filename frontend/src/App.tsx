@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, X, Loader2 } from 'lucide-react'
+import { Search, X, Loader2, Plus } from 'lucide-react'
 import type { Prompt } from './types'
 import { fetchPrompts } from './api'
 import Header from './components/Header'
 import TagBadge from './components/TagBadge'
 import PromptCard from './components/PromptCard'
 import PromptDetail from './components/PromptDetail'
+import CreatePromptModal from './components/CreatePromptModal'
 
 export default function App() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
@@ -14,6 +15,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [selected, setSelected] = useState<Prompt | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
   const [isDark, setIsDark] = useState(() => {
     const stored = localStorage.getItem('theme')
@@ -60,6 +62,10 @@ export default function App() {
     setActiveTag((prev) => (prev === tag ? null : tag))
   }
 
+  function handleCreated(prompt: Prompt) {
+    setPrompts((prev) => [prompt, ...prev])
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b11]">
       <Header isDark={isDark} onToggleTheme={() => setIsDark((d) => !d)} />
@@ -77,7 +83,8 @@ export default function App() {
 
         {/* Search + filter bar */}
         <div className="mb-6 space-y-3">
-          <div className="relative">
+          <div className="flex gap-2">
+          <div className="relative flex-1">
             <Search
               size={15}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600"
@@ -97,6 +104,14 @@ export default function App() {
                 <X size={14} />
               </button>
             )}
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-600/10 px-3.5 py-2.5 text-sm font-medium text-indigo-500 transition-colors hover:bg-indigo-600/20 dark:border-indigo-500/20 dark:text-indigo-400"
+          >
+            <Plus size={15} />
+            Add
+          </button>
           </div>
 
           {/* Tag pills */}
@@ -169,6 +184,14 @@ export default function App() {
       {/* Detail panel */}
       {selected && (
         <PromptDetail prompt={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {/* Create modal */}
+      {showCreate && (
+        <CreatePromptModal
+          onClose={() => setShowCreate(false)}
+          onCreated={handleCreated}
+        />
       )}
     </div>
   )

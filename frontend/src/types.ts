@@ -8,4 +8,5 @@ export interface Prompt {
     [key: string]: unknown
   }
   version: string
+  card?: string
 }
