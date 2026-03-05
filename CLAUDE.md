@@ -39,19 +39,20 @@ Run `make run` (backend on :8000) and `npm run dev` simultaneously — the Vite 
 
 Entry point: `cmd/prompthub/main.go`. Three internal packages under `internal/`:
 
-- **`internal/config/`** — `config.Load()` reads `prompthub.yaml` and env vars (prefix `PROMPTHUB_`) via Viper. Returns a typed `Config` struct. A missing config file is not fatal; env vars and defaults suffice.
-- **`internal/store/`** — Database layer. `store.New()` opens a pgxpool connection. Methods: `GetPrompts`, `GetPrompt`, `GetCard`. Returns `store.ErrNotFound` when a record is absent.
-- **`internal/api/`** — HTTP layer. `Server` struct holds `*store.Store` as a dependency (constructor injection via `api.NewServer`). Routes and middleware are in `server.go`; handlers are in `handlers.go`. Uses structured logging via `log/slog`.
+- **`internal/config/`** — `config.Load()` reads `prompthub.yaml` and env vars (prefix `PROMPTHUB_`) via Viper. Returns a typed `Config` struct. A missing config file is not fatal; env vars and defaults suffice. Returns an error if a config file is found but cannot be parsed.
+- **`internal/store/`** — Database layer. `store.New()` opens a pgxpool connection. Methods: `GetPrompts`, `GetPrompt`, `GetCard`, `CreatePrompt`. `Close()` releases the pool. Returns `store.ErrNotFound` when a record is absent. `GetCard` returns `("", nil)` when the prompt exists but has no card.
+- **`internal/api/`** — HTTP layer. `Server` struct holds `*store.Store` as a dependency (constructor injection via `api.NewServer`). Routes and middleware are in `server.go`; handlers are in `handlers.go`. Uses structured logging via `log/slog`. A `logRequest` middleware logs method, path, status, and duration for every request.
 
 ### API Routes
 
 | Method | Path | Handler |
 |--------|------|---------|
 | GET | `/prompts` | `listPrompts` — returns all prompts as JSON array |
+| POST | `/prompts` | `createPrompt` — creates a new prompt; requires `name`, `text`, `version` |
 | GET | `/prompts/{name}` | `getPrompt` — returns single prompt by name |
 | GET | `/cards/{name}` | `getCard` — returns prompt card as plain text |
 
-Prompt names can contain slashes (e.g., `rnditb2c/idea-generator`); routing uses chi's wildcard `/*`.
+Prompt names can contain slashes (e.g., `rnditb2c/idea-generator`); routing uses chi's wildcard `/*`. CORS allows `GET` and `POST` with `Content-Type` header.
 
 ### Frontend (React + TypeScript)
 
