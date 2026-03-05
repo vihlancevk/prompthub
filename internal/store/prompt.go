@@ -8,4 +8,5 @@ type Prompt struct {
 	Version     string         `json:"version"`
 	Text        string         `json:"text"`
 	Description string         `json:"description"`
+	Card        *string        `json:"card,omitempty"`
 }

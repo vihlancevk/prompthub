@@ -65,7 +65,8 @@ func (s *Server) routes() http.Handler {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: s.allowedOrigins,
-		AllowedMethods: []string{"GET"},
+		AllowedMethods: []string{"GET", "POST"},
+		AllowedHeaders: []string{"Content-Type"},
 	}))
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +77,7 @@ func (s *Server) routes() http.Handler {
 
 	r.Route("/prompts", func(r chi.Router) {
 		r.Get("/", s.listPrompts)
+		r.Post("/", s.createPrompt)
 		r.Get("/*", s.getPrompt)
 	})
 	r.Route("/cards", func(r chi.Router) {

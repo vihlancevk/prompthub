@@ -77,6 +77,19 @@ func (s *Store) GetPrompt(ctx context.Context, name string) (*Prompt, error) {
 	return &p, nil
 }
 
+// CreatePrompt inserts a new prompt. Returns an error if the name already exists.
+func (s *Store) CreatePrompt(ctx context.Context, p *Prompt) error {
+	metaBytes, err := json.Marshal(p.Meta)
+	if err != nil {
+		return err
+	}
+	_, err = s.pool.Exec(ctx,
+		`INSERT INTO prompts (name, text, description, tags, meta, version, card)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		p.Name, p.Text, p.Description, p.Tags, metaBytes, p.Version, p.Card)
+	return err
+}
+
 // GetCard returns the markdown card for a prompt.
 // Returns ErrNotFound if the prompt does not exist.
 // Returns ("", nil) if the prompt exists but has no card (card is optional).

@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"rnditb2c/prompthub/internal/store"
 
@@ -31,6 +32,31 @@ func (s *Server) listPrompts(w http.ResponseWriter, r *http.Request) {
 		list[i] = &promptResponse{p}
 	}
 	if err := render.RenderList(w, r, list); err != nil {
+		render.Render(w, r, errRender(err))
+	}
+}
+
+func (s *Server) createPrompt(w http.ResponseWriter, r *http.Request) {
+	var p store.Prompt
+	if err := render.DecodeJSON(r.Body, &p); err != nil {
+		render.Render(w, r, errBadRequest(err))
+		return
+	}
+	p.Name = strings.TrimSpace(p.Name)
+	if p.Name == "" || p.Text == "" || p.Version == "" {
+		render.Render(w, r, errBadRequest(errors.New("name, text, and version are required")))
+		return
+	}
+	if err := s.store.CreatePrompt(r.Context(), &p); err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			render.Render(w, r, errConflict(errors.New("a prompt with this name already exists")))
+		} else {
+			render.Render(w, r, errInternal(err))
+		}
+		return
+	}
+	render.Status(r, http.StatusCreated)
+	if err := render.Render(w, r, &promptResponse{&p}); err != nil {
 		render.Render(w, r, errRender(err))
 	}
 }
