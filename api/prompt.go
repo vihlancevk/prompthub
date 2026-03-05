@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/deepset-ai/prompthub/index"
+	"rnditb2c/prompthub/index"
 )
 
 // PromptResponse is the response payload for the Prompt data model.

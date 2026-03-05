@@ -1,7 +1,7 @@
 package output
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 
@@ -21,15 +21,16 @@ const DefaultVerbosity = jww.LevelInfo
 
 func Init(verbosity int) {
 	threshold := DefaultVerbosity
-	if verbosity == 0 {
+	switch verbosity {
+	case 0:
 		threshold = jww.LevelFatal
-	} else if verbosity == 1 {
+	case 1:
 		threshold = jww.LevelInfo
-	} else if verbosity == 2 {
+	case 2:
 		threshold = jww.LevelDebug
 	}
 
-	np = jww.NewNotepad(threshold, threshold, os.Stdout, ioutil.Discard, "", 0)
+	np = jww.NewNotepad(threshold, threshold, os.Stdout, io.Discard, "", 0)
 	DEBUG = np.DEBUG
 	INFO = np.INFO
 	ERROR = np.ERROR

@@ -1,5 +1,7 @@
+.env
+.vscode/
+
+__pycache__/
+
 prompthub
 prompthub.yaml
-
-.vscode
-__pycache__

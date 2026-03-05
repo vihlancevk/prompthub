@@ -2,14 +2,16 @@ package api
 
 import (
 	"context"
-	fmt "fmt"
+	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/deepset-ai/prompthub/index"
-	"github.com/deepset-ai/prompthub/output"
+	"rnditb2c/prompthub/index"
+	"rnditb2c/prompthub/output"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
@@ -23,6 +25,12 @@ func Serve() {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: viper.GetStringSlice("allowed_origins"),
 	}))
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+			next.ServeHTTP(w, r)
+		})
+	})
 	output.DEBUG.Printf("AllowedOrigins set to: %s", viper.GetStringSlice("allowed_origins"))
 
 	promptsRouter := chi.NewRouter()
@@ -48,8 +56,9 @@ func Serve() {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			output.FATAL.Println(err)
+			os.Exit(1)
 		}
 	}()
 
@@ -64,16 +73,18 @@ func Serve() {
 	<-c
 
 	// Create a deadline to wait for.
-	ctx, cancel := context.WithTimeout(context.Background(), 10)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// Doesn't block if no connections, but will otherwise wait
 	// until the timeout deadline.
-	srv.Shutdown(ctx)
+	if err := srv.Shutdown(ctx); err != nil {
+		output.ERROR.Println("shutdown error:", err)
+	}
 	output.INFO.Println("shutting down")
 }
 
 func ListPrompts(w http.ResponseWriter, r *http.Request) {
-	prompts := index.GetPrompts()
+	prompts := index.GetPrompts(r.Context())
 	if err := render.RenderList(w, r, NewPromptListResponse(prompts)); err != nil {
 		render.Render(w, r, ErrRender(err))
 		return
@@ -90,7 +101,7 @@ func NewPromptListResponse(prompts []*index.Prompt) []render.Renderer {
 
 func GetPrompt(w http.ResponseWriter, r *http.Request) {
 	promptName := chi.URLParam(r, "*")
-	prompt, err := index.GetPrompt(promptName)
+	prompt, err := index.GetPrompt(r.Context(), promptName)
 	if err != nil {
 		render.Render(w, r, ErrNotFound)
 		return
@@ -104,7 +115,7 @@ func GetPrompt(w http.ResponseWriter, r *http.Request) {
 
 func GetCard(w http.ResponseWriter, r *http.Request) {
 	promptName := chi.URLParam(r, "*")
-	card, err := index.GetCard(promptName)
+	card, err := index.GetCard(r.Context(), promptName)
 	if err != nil {
 		render.Render(w, r, ErrNotFound)
 		return
