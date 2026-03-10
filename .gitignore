@@ -1,7 +1,8 @@
 .env
-.vscode/
+
+/.vscode/
+
+/prompthub
+/prompthub.yaml
 
 __pycache__/
-
-prompthub
-prompthub.yaml
