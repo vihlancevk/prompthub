@@ -83,6 +83,76 @@ func (s *Store) CreatePrompt(ctx context.Context, p *Prompt) error {
 	return err
 }
 
+// GetSkills returns all skills. Returns an error on any DB failure.
+func (s *Store) GetSkills(ctx context.Context) ([]*Skill, error) {
+	rows, err := s.pool.Query(ctx,
+		`SELECT sk.name, a.name, sk.version, sk.tags, sk.description, sk.text
+		 FROM skills sk
+		 JOIN authors a ON a.id = sk.author_id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*Skill
+	for rows.Next() {
+		var sk Skill
+		if err := rows.Scan(&sk.Name, &sk.AuthorName, &sk.Version, &sk.Tags, &sk.Description, &sk.Text); err != nil {
+			return nil, err
+		}
+		result = append(result, &sk)
+	}
+	return result, rows.Err()
+}
+
+// GetSkill returns a single skill by name, or ErrNotFound if it doesn't exist.
+func (s *Store) GetSkill(ctx context.Context, name string) (*Skill, error) {
+	row := s.pool.QueryRow(ctx,
+		`SELECT sk.name, a.name, sk.version, sk.tags, sk.description, sk.text
+		 FROM skills sk
+		 JOIN authors a ON a.id = sk.author_id
+		 WHERE sk.name = $1`, name)
+
+	var sk Skill
+	if err := row.Scan(&sk.Name, &sk.AuthorName, &sk.Version, &sk.Tags, &sk.Description, &sk.Text); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &sk, nil
+}
+
+// CreateSkill inserts a new skill. Returns an error if the name already exists
+// or the author does not exist.
+func (s *Store) CreateSkill(ctx context.Context, sk *Skill) error {
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO skills (name, author_id, version, tags, description, text, card)
+		 VALUES ($1, (SELECT id FROM authors WHERE name = $2), $3, $4, $5, $6, $7)`,
+		sk.Name, sk.AuthorName, sk.Version, sk.Tags, sk.Description, sk.Text, sk.Card)
+	return err
+}
+
+// GetSkillCard returns the markdown card for a skill.
+// Returns ErrNotFound if the skill does not exist.
+// Returns ("", nil) if the skill exists but has no card (card is optional).
+func (s *Store) GetSkillCard(ctx context.Context, name string) (string, error) {
+	row := s.pool.QueryRow(ctx,
+		`SELECT card FROM skills WHERE name=$1`, name)
+
+	var card *string
+	if err := row.Scan(&card); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrNotFound
+		}
+		return "", err
+	}
+	if card == nil {
+		return "", nil
+	}
+	return *card, nil
+}
+
 // GetCard returns the markdown card for a prompt.
 // Returns ErrNotFound if the prompt does not exist.
 // Returns ("", nil) if the prompt exists but has no card (card is optional).

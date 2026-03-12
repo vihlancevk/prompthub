@@ -40,7 +40,7 @@ Run `make run` (backend on :8000) and `npm run dev` simultaneously — the Vite 
 Entry point: `cmd/prompthub/main.go`. Three internal packages under `internal/`:
 
 - **`internal/config/`** — `config.Load()` reads `prompthub.yaml` and env vars (prefix `PROMPTHUB_`) via Viper. Returns a typed `Config` struct. A missing config file is not fatal; env vars and defaults suffice. Returns an error if a config file is found but cannot be parsed.
-- **`internal/store/`** — Database layer. `store.New()` opens a pgxpool connection. Methods: `GetPrompts`, `GetPrompt`, `GetCard`, `CreatePrompt`. `Close()` releases the pool. Returns `store.ErrNotFound` when a record is absent. `GetCard` returns `("", nil)` when the prompt exists but has no card.
+- **`internal/store/`** — Database layer. `store.New()` opens a pgxpool connection. Prompt methods: `GetPrompts`, `GetPrompt`, `CreatePrompt`, `GetCard`. Skill methods: `GetSkills`, `GetSkill`, `CreateSkill`, `GetSkillCard`. `Close()` releases the pool. Returns `store.ErrNotFound` when a record is absent. `GetCard`/`GetSkillCard` return `("", nil)` when the record exists but has no card.
 - **`internal/api/`** — HTTP layer. `Server` struct holds `*store.Store` as a dependency (constructor injection via `api.NewServer`). Routes and middleware are in `server.go`; handlers are in `handlers.go`. Uses structured logging via `log/slog`. A `logRequest` middleware logs method, path, status, and duration for every request.
 
 ### API Routes
@@ -51,6 +51,10 @@ Entry point: `cmd/prompthub/main.go`. Three internal packages under `internal/`:
 | POST | `/prompts` | `createPrompt` — creates a new prompt; requires `name`, `author_name`, `text`, `version` |
 | GET | `/prompts/{author}/{name}` | `getPrompt` — returns single prompt by author and name |
 | GET | `/cards/{author}/{name}` | `getCard` — returns prompt card as plain text |
+| GET | `/skills` | `listSkills` — returns all skills as JSON array |
+| POST | `/skills` | `createSkill` — creates a new skill; requires `name`, `author_name`, `text`, `version` |
+| GET | `/skills/{author}/{name}` | `getSkill` — returns single skill by author and name |
+| GET | `/skill-cards/{author}/{name}` | `getSkillCard` — returns skill card as plain text |
 
 CORS allows `GET` and `POST` with `Content-Type` header.
 

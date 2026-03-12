@@ -83,6 +83,14 @@ func (s *Server) routes() http.Handler {
 	r.Route("/cards", func(r chi.Router) {
 		r.Get("/*", s.getCard)
 	})
+	r.Route("/skills", func(r chi.Router) {
+		r.Get("/", s.listSkills)
+		r.Post("/", s.createSkill)
+		r.Get("/*", s.getSkill)
+	})
+	r.Route("/skill-cards", func(r chi.Router) {
+		r.Get("/*", s.getSkillCard)
+	})
 
 	return r
 }

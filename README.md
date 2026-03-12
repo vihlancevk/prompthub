@@ -1,10 +1,10 @@
 # PromptHub
 
-PromptHub serves a collection of ready-made prompts for the most common NLP tasks.
+PromptHub serves a collection of ready-made prompts and skills for the most common NLP tasks.
 
-## Prompt format
+## Data format
 
-Defined in `migrations/001_create_tables.sql`. Each prompt belongs to an author and is uniquely identified by the `(name, author_id)` pair.
+Defined in `migrations/001_create_tables.sql`. Each record belongs to an author and is uniquely identified by the `(name, author_id)` pair.
 
 ```sql
 authors (id, name)
@@ -14,7 +14,9 @@ skills  (name, author_id, version, tags, description, text, card)
 
 ## PromptHub API
 
-### Get all prompts
+### Prompts
+
+#### Get all prompts
 
 `GET /prompts`
 
@@ -34,7 +36,7 @@ Content-Type: application/json; charset=utf-8
 ]
 ```
 
-### Get a specific prompt
+#### Get a specific prompt
 
 `GET /prompts/{author}/{name}`
 
@@ -52,18 +54,82 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-### Create a prompt
+#### Create a prompt
 
 `POST /prompts`
+
+Request body (JSON): `name`, `author_name`, `text`, `version` required; `tags`, `description`, `card` optional.
 
 ```
 HTTP/1.1 201 Created
 Content-Type: application/json; charset=utf-8
 ```
 
-### Get a prompt card
+#### Get a prompt card
 
 `GET /cards/{author}/{name}`
+
+```
+HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8
+
+<markdown content>
+```
+
+### Skills
+
+#### Get all skills
+
+`GET /skills`
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+[
+  {
+    "name": "<...>",
+    "author_name": "<...>",
+    "version": "<...>",
+    "tags": ["<...>"],
+    "description": "<...>",
+    "text": "<...>"
+  }
+]
+```
+
+#### Get a specific skill
+
+`GET /skills/{author}/{name}`
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{
+  "name": "<...>",
+  "author_name": "<...>",
+  "version": "<...>",
+  "tags": ["<...>"],
+  "description": "<...>",
+  "text": "<...>"
+}
+```
+
+#### Create a skill
+
+`POST /skills`
+
+Request body (JSON): `name`, `author_name`, `text`, `version` required; `tags`, `description`, `card` optional.
+
+```
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+```
+
+#### Get a skill card
+
+`GET /skill-cards/{author}/{name}`
 
 ```
 HTTP/1.1 200 OK

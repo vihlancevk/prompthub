@@ -2,8 +2,8 @@ package store
 
 import "net/http"
 
-// Prompt is the core data model returned by all prompt queries.
-type Prompt struct {
+// Skill is the core data model returned by all skill queries.
+type Skill struct {
 	Name        string   `json:"name"`
 	AuthorName  string   `json:"author_name"`
 	Version     string   `json:"version"`
@@ -13,5 +13,5 @@ type Prompt struct {
 	Card        *string  `json:"card,omitempty"`
 }
 
-// Render implements render.Renderer so *Prompt can be passed directly to chi/render.
-func (p *Prompt) Render(_ http.ResponseWriter, _ *http.Request) error { return nil }
+// Render implements render.Renderer so *Skill can be passed directly to chi/render.
+func (s *Skill) Render(_ http.ResponseWriter, _ *http.Request) error { return nil }
