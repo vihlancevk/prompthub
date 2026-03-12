@@ -1,14 +1,22 @@
 import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import type { Prompt } from '../types'
-import { createPrompt } from '../api'
 
-interface Props {
-  onClose: () => void
-  onCreated: (prompt: Prompt) => void
+interface ModalLabels {
+  title: string
+  namePlaceholder: string
+  textPlaceholder: string
+  submitBtn: string
 }
 
-export default function CreatePromptModal({ onClose, onCreated }: Props) {
+interface CreateItemModalProps {
+  onClose: () => void
+  onCreated: (item: Prompt) => void
+  createFn: (item: Prompt) => Promise<Prompt>
+  labels: ModalLabels
+}
+
+export default function CreateItemModal({ onClose, onCreated, createFn, labels }: CreateItemModalProps) {
   const [name, setName] = useState('')
   const [authorName, setAuthorName] = useState('')
   const [description, setDescription] = useState('')
@@ -24,19 +32,16 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
     setError(null)
     setSubmitting(true)
     try {
-      const prompt = await createPrompt({
+      const item = await createFn({
         name: name.trim(),
         author_name: authorName.trim(),
         description: description.trim(),
         text: text.trim(),
         version: version.trim(),
-        tags: tags
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
         ...(card.trim() ? { card: card.trim() } : {}),
       })
-      onCreated(prompt)
+      onCreated(item)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -50,16 +55,10 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-white/[0.08] dark:bg-[#0d1117]">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-white/[0.06]">
-          <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">
-            Add New Prompt
-          </h2>
+          <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">{labels.title}</h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-400"
@@ -68,7 +67,6 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
@@ -77,7 +75,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <input
                 className={inputCls}
-                placeholder="Name of the prompt"
+                placeholder={labels.namePlaceholder}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -108,9 +106,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                Tags
-              </label>
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Tags</label>
               <input
                 className={inputCls}
                 placeholder="tag1, tag2, ..."
@@ -124,7 +120,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <input
                 className={inputCls}
-                placeholder="Short description of the prompt"
+                placeholder="Short description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
@@ -136,7 +132,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <textarea
                 className={`${inputCls} h-32 resize-y`}
-                placeholder="You are a helpful assistant…"
+                placeholder={labels.textPlaceholder}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 required
@@ -148,7 +144,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <textarea
                 className={`${inputCls} h-28 resize-y font-mono text-xs`}
-                placeholder="# My Prompt&#10;Extended markdown description…"
+                placeholder="# My Item&#10;Extended markdown description…"
                 value={card}
                 onChange={(e) => setCard(e.target.value)}
               />
@@ -175,7 +171,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-60"
             >
               {submitting && <Loader2 size={14} className="animate-spin" />}
-              Create Prompt
+              {labels.submitBtn}
             </button>
           </div>
         </form>

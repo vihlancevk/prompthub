@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PromptHub is a full-stack application that serves a collection of ready-made NLP prompts. The backend is a Go HTTP API backed by PostgreSQL; the frontend is a React SPA.
+PromptHub is a full-stack application that serves a collection of ready-made NLP prompts and skills. The backend is a Go HTTP API backed by PostgreSQL; the frontend is a React multi-page app.
 
 ## Commands
 
@@ -60,12 +60,25 @@ CORS allows `GET` and `POST` with `Content-Type` header.
 
 ### Frontend (React + TypeScript)
 
-Single-page app in `frontend/src/`:
+Multi-page app in `frontend/src/` using React Router v6. Three routes:
 
-- **`App.tsx`** — Root component. Manages all state: fetched prompts, search text, active tag filter, selected prompt, and theme (dark/light, persisted in localStorage).
-- **`api.ts`** — Fetches from `/api/prompts` using relative URLs.
-- **`types.ts`** — `Prompt` interface matching the backend JSON shape.
-- **`components/`** — `Header`, `PromptCard`, `PromptDetail`, `TagBadge`, `CreatePromptModal`.
+- `/` — Welcome page with navigation cards to Prompts and Skills
+- `/prompts` — Browse, search, filter, and create prompts
+- `/skills` — Browse, search, filter, and create skills
+
+Key files:
+
+- **`App.tsx`** — Root component. Owns theme state (dark/light, persisted in `localStorage`). Renders `Header` and the `Routes` tree.
+- **`api.ts`** — HTTP client. Functions: `fetchPrompts`, `createPrompt`, `fetchCard`, `fetchSkills`, `createSkill`, `fetchSkillCard`. All use relative `/api` URLs.
+- **`types.ts`** — `Prompt` interface matching the backend JSON shape. `Skill` is a type alias for `Prompt` (identical shape).
+- **`pages/WelcomePage.tsx`** — Landing page with two navigation cards.
+- **`pages/PromptsPage.tsx`** and **`pages/SkillsPage.tsx`** — Thin config wrappers around `BrowsePage`.
+- **`pages/BrowsePage.tsx`** — Generic browse/filter/create page. Accepts `fetchItems`, `fetchCard`, `createItem`, and a `labels` config object. Shared by both Prompts and Skills pages.
+- **`components/Header.tsx`** — Sticky header with logo, `NavLink` navigation (Prompts / Skills), theme toggle, and GitHub link. Nav entries are driven by a `NAV_LINKS` config array.
+- **`components/ItemCard.tsx`** — Card component for a single prompt or skill. Shows author/name, description, tags, version, and a copy button.
+- **`components/ItemDetail.tsx`** — Slide-in detail panel. Accepts `fetchCard` as a prop to load the markdown documentation card. Highlights `{variable}` placeholders.
+- **`components/CreateItemModal.tsx`** — Modal form for creating a new prompt or skill. Accepts `createFn` and a `labels` config object.
+- **`components/TagBadge.tsx`** — Colored tag pill with a fixed color map and active state.
 
 ### Database Schema
 

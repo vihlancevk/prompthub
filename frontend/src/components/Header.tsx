@@ -1,4 +1,10 @@
 import { Github, Sun, Moon } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+
+const NAV_LINKS = [
+  { to: '/prompts', label: 'Prompts' },
+  { to: '/skills', label: 'Skills' },
+]
 
 interface HeaderProps {
   isDark: boolean
@@ -9,14 +15,34 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#070b11]/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25">
-            <span className="text-sm font-bold text-white">P</span>
-          </div>
-          <span className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
-            PromptHub
-          </span>
+        {/* Logo + Nav */}
+        <div className="flex items-center gap-6">
+          <NavLink to="/" className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25">
+              <span className="text-sm font-bold text-white">P</span>
+            </div>
+            <span className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+              PromptHub
+            </span>
+          </NavLink>
+
+          <nav className="flex items-center gap-1">
+            {NAV_LINKS.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
         </div>
 
         {/* Right side: theme toggle + GitHub */}

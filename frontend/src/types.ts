@@ -7,3 +7,5 @@ export interface Prompt {
   text: string
   card?: string
 }
+
+export type Skill = Prompt

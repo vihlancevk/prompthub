@@ -160,7 +160,12 @@ make test
 
 ### Frontend
 
-React 18 + TypeScript + Vite + Tailwind CSS. Source in `frontend/`.
+React 18 + TypeScript + Vite + Tailwind CSS + React Router v6. Source in `frontend/`.
+
+Three pages:
+- `/` — Welcome page with navigation to Prompts and Skills
+- `/prompts` — Browse, search, filter, and create prompts
+- `/skills` — Browse, search, filter, and create skills
 
 ```sh
 cd frontend
