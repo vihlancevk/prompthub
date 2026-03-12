@@ -48,11 +48,11 @@ Entry point: `cmd/prompthub/main.go`. Three internal packages under `internal/`:
 | Method | Path | Handler |
 |--------|------|---------|
 | GET | `/prompts` | `listPrompts` — returns all prompts as JSON array |
-| POST | `/prompts` | `createPrompt` — creates a new prompt; requires `name`, `text`, `version` |
-| GET | `/prompts/{name}` | `getPrompt` — returns single prompt by name |
-| GET | `/cards/{name}` | `getCard` — returns prompt card as plain text |
+| POST | `/prompts` | `createPrompt` — creates a new prompt; requires `name`, `author_name`, `text`, `version` |
+| GET | `/prompts/{author}/{name}` | `getPrompt` — returns single prompt by author and name |
+| GET | `/cards/{author}/{name}` | `getCard` — returns prompt card as plain text |
 
-Prompt names can contain slashes (e.g., `rnditb2c/idea-generator`); routing uses chi's wildcard `/*`. CORS allows `GET` and `POST` with `Content-Type` header.
+CORS allows `GET` and `POST` with `Content-Type` header.
 
 ### Frontend (React + TypeScript)
 
@@ -61,23 +61,42 @@ Single-page app in `frontend/src/`:
 - **`App.tsx`** — Root component. Manages all state: fetched prompts, search text, active tag filter, selected prompt, and theme (dark/light, persisted in localStorage).
 - **`api.ts`** — Fetches from `/api/prompts` using relative URLs.
 - **`types.ts`** — `Prompt` interface matching the backend JSON shape.
-- **`components/`** — `Header`, `PromptCard`, `PromptDetail`, `TagBadge`.
+- **`components/`** — `Header`, `PromptCard`, `PromptDetail`, `TagBadge`, `CreatePromptModal`.
 
 ### Database Schema
 
-Defined in `migrations/001_create_table.sql`. Managed by [Goose](https://github.com/pressly/goose).
+Defined in `migrations/001_create_tables.sql`. Managed by [Goose](https://github.com/pressly/goose).
 
 ```sql
+CREATE TABLE authors (
+    id   SERIAL      PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
 CREATE TABLE prompts (
-    name        TEXT PRIMARY KEY,  -- e.g., "org/prompt-name"
-    text        TEXT NOT NULL,
-    description TEXT NOT NULL,
-    tags        TEXT[] NOT NULL DEFAULT '{}',
-    meta        JSONB NOT NULL DEFAULT '{}',  -- e.g., {"authors": [...]}
-    version     TEXT NOT NULL,
-    card        TEXT
+    name        TEXT    NOT NULL,
+    author_id   INTEGER NOT NULL REFERENCES authors(id),
+    version     TEXT    NOT NULL,
+    tags        TEXT[]  NOT NULL DEFAULT '{}',
+    description TEXT    NOT NULL,
+    text        TEXT    NOT NULL,
+    card        TEXT,
+    PRIMARY KEY (name, author_id)
+);
+
+CREATE TABLE skills (
+    name        TEXT    NOT NULL,
+    author_id   INTEGER NOT NULL REFERENCES authors(id),
+    version     TEXT    NOT NULL,
+    tags        TEXT[]  NOT NULL DEFAULT '{}',
+    description TEXT    NOT NULL,
+    text        TEXT    NOT NULL,
+    card        TEXT,
+    PRIMARY KEY (name, author_id)
 );
 ```
+
+Prompts and skills are uniquely identified by `(name, author_id)`. The API resolves author by name and returns `author_name` via JOIN.
 
 ### Configuration
 

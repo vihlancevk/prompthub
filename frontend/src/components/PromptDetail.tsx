@@ -50,16 +50,14 @@ export default function PromptDetail({ prompt, onClose }: PromptDetailProps) {
   // Fetch markdown card
   useEffect(() => {
     setCard(null)
-    fetchCard(prompt.name).then(setCard).catch(() => setCard(''))
-  }, [prompt.name])
+    fetchCard(prompt.author_name, prompt.name).then(setCard).catch(() => setCard(''))
+  }, [prompt.name, prompt.author_name])
 
   async function handleCopy() {
     await navigator.clipboard.writeText(prompt.text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
-
-  const authors = prompt.meta?.authors ?? []
 
   return (
     <>
@@ -74,17 +72,15 @@ export default function PromptDetail({ prompt, onClose }: PromptDetailProps) {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-white/[0.06]">
           <div className="min-w-0 flex-1">
-            <p className="mb-0.5 text-xs text-slate-400 dark:text-slate-500">{prompt.name.split('/')[0]}/</p>
+            <p className="mb-0.5 text-xs text-slate-400 dark:text-slate-500">{prompt.author_name}/</p>
             <h2 className="truncate text-lg font-semibold text-slate-900 dark:text-white">
-              {prompt.name.includes('/') ? prompt.name.split('/').slice(1).join('/') : prompt.name}
+              {prompt.name}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              {authors.map((a) => (
-                <span key={a} className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
-                  <User size={11} />
-                  {a}
-                </span>
-              ))}
+              <span className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+                <User size={11} />
+                {prompt.author_name}
+              </span>
               {prompt.version && (
                 <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-500 dark:bg-white/[0.04]">
                   {prompt.version}

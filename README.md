@@ -4,74 +4,72 @@ PromptHub serves a collection of ready-made prompts for the most common NLP task
 
 ## Prompt format
 
-A prompt format is defined in the migrations/001_create_table.sql file.
+Defined in `migrations/001_create_tables.sql`. Each prompt belongs to an author and is uniquely identified by the `(name, author_id)` pair.
+
+```sql
+authors (id, name)
+prompts (name, author_id, version, tags, description, text, card)
+skills  (name, author_id, version, tags, description, text, card)
+```
 
 ## PromptHub API
 
-### Get all the prompts
+### Get all prompts
 
 `GET /prompts`
-
-Response:
 
 ```
 HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
-Date: <...>
-Content-Length: <...>
 
 [
   {
     "name": "<...>",
-    "tags": ["<...>"],
-    "meta": {
-      "authors": ["<...>", "<...>"]
-    },
+    "author_name": "<...>",
     "version": "<...>",
-    "text": "<...>",
-    "description": "<...>"
+    "tags": ["<...>"],
+    "description": "<...>",
+    "text": "<...>"
   }
 ]
 ```
 
-### Get a specific prompt by name
+### Get a specific prompt
 
-`GET /prompts/{name}`
-
-Response:
+`GET /prompts/{author}/{name}`
 
 ```
 HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
-Date: <...>
-Content-Length: <...>
 
 {
   "name": "<...>",
-  "tags": ["<...>"],
-  "meta": {
-    "authors": ["<...>"]
-  },
+  "author_name": "<...>",
   "version": "<...>",
-  "text": "<...>",
-  "description": "<...>"
+  "tags": ["<...>"],
+  "description": "<...>",
+  "text": "<...>"
 }
 ```
 
-### Get a prompt card by name
+### Create a prompt
 
-`GET /cards/{name}`
+`POST /prompts`
 
-Response:
+```
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+```
+
+### Get a prompt card
+
+`GET /cards/{author}/{name}`
 
 ```
 HTTP/1.1 200 OK
 Content-Type: text/plain; charset=utf-8
-Vary: Origin
-Date: <...>
-Content-Length: <...>
 
-<...>
+<markdown content>
 ```
 
 ## Development
@@ -81,7 +79,7 @@ Content-Length: <...>
 Requires a recent version of [Go](https://go.dev) (1.25+) and a running PostgreSQL database.
 
 ```sh
-# Migrate db
+# Apply DB migrations
 make migrate-up
 
 # Build

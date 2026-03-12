@@ -8,13 +8,13 @@ export async function fetchPrompts(): Promise<Prompt[]> {
   return res.json()
 }
 
-export async function fetchPrompt(name: string): Promise<Prompt> {
-  const res = await fetch(`${BASE}/prompts/${name}`)
+export async function fetchPrompt(authorName: string, name: string): Promise<Prompt> {
+  const res = await fetch(`${BASE}/prompts/${authorName}/${name}`)
   if (!res.ok) throw new Error(`Failed to fetch prompt: ${res.status}`)
   return res.json()
 }
 
-export async function createPrompt(prompt: Omit<Prompt, 'meta'> & { meta?: Prompt['meta'] }): Promise<Prompt> {
+export async function createPrompt(prompt: Prompt): Promise<Prompt> {
   const res = await fetch(`${BASE}/prompts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -27,8 +27,8 @@ export async function createPrompt(prompt: Omit<Prompt, 'meta'> & { meta?: Promp
   return res.json()
 }
 
-export async function fetchCard(name: string): Promise<string> {
-  const res = await fetch(`${BASE}/cards/${name}`)
+export async function fetchCard(authorName: string, name: string): Promise<string> {
+  const res = await fetch(`${BASE}/cards/${authorName}/${name}`)
   if (!res.ok) return ''
   return res.text()
 }

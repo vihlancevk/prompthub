@@ -11,15 +11,8 @@ interface PromptCardProps {
 
 const MAX_TAGS = 2
 
-function splitName(name: string): { namespace: string; slug: string } {
-  const idx = name.indexOf('/')
-  if (idx === -1) return { namespace: '', slug: name }
-  return { namespace: name.slice(0, idx), slug: name.slice(idx + 1) }
-}
-
 export default function PromptCard({ prompt, selected, onClick }: PromptCardProps) {
   const [copied, setCopied] = useState(false)
-  const { namespace, slug } = splitName(prompt.name)
   const tags = prompt.tags ?? []
   const visibleTags = tags.slice(0, MAX_TAGS)
   const extraTags = tags.length - MAX_TAGS
@@ -43,11 +36,9 @@ export default function PromptCard({ prompt, selected, onClick }: PromptCardProp
       {/* Top row: name + copy */}
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          {namespace && (
-            <span className="block text-xs text-slate-400 dark:text-slate-500">{namespace}/</span>
-          )}
+          <span className="block text-xs text-slate-400 dark:text-slate-500">{prompt.author_name}/</span>
           <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">
-            {slug || prompt.name}
+            {prompt.name}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">

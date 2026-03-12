@@ -10,6 +10,7 @@ interface Props {
 
 export default function CreatePromptModal({ onClose, onCreated }: Props) {
   const [name, setName] = useState('')
+  const [authorName, setAuthorName] = useState('')
   const [description, setDescription] = useState('')
   const [text, setText] = useState('')
   const [version, setVersion] = useState('')
@@ -25,6 +26,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
     try {
       const prompt = await createPrompt({
         name: name.trim(),
+        author_name: authorName.trim(),
         description: description.trim(),
         text: text.trim(),
         version: version.trim(),
@@ -75,9 +77,21 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <input
                 className={inputCls}
-                placeholder="org/prompt-name"
+                placeholder="Name of the prompt"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+                Author <span className="text-red-400">*</span>
+              </label>
+              <input
+                className={inputCls}
+                placeholder="rnditb2c"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
                 required
               />
             </div>
@@ -87,7 +101,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <input
                 className={inputCls}
-                placeholder="0.1.0"
+                placeholder="1.0.0"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
                 required
@@ -99,7 +113,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
               </label>
               <input
                 className={inputCls}
-                placeholder="nlp, chat, coding"
+                placeholder="tag1, tag2, ..."
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
               />
@@ -118,7 +132,7 @@ export default function CreatePromptModal({ onClose, onCreated }: Props) {
             </div>
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                Prompt Text <span className="text-red-400">*</span>
+                Text <span className="text-red-400">*</span>
               </label>
               <textarea
                 className={`${inputCls} h-32 resize-y`}

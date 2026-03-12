@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/jackc/pgx/v5"
@@ -37,7 +36,9 @@ func New(ctx context.Context, dsn string) (*Store, error) {
 // GetPrompts returns all prompts. Returns an error on any DB failure.
 func (s *Store) GetPrompts(ctx context.Context) ([]*Prompt, error) {
 	rows, err := s.pool.Query(ctx,
-		`SELECT name, text, description, tags, meta, version FROM prompts`)
+		`SELECT p.name, a.name, p.version, p.tags, p.description, p.text
+		 FROM prompts p
+		 JOIN authors a ON a.id = p.author_id`)
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +47,7 @@ func (s *Store) GetPrompts(ctx context.Context) ([]*Prompt, error) {
 	var result []*Prompt
 	for rows.Next() {
 		var p Prompt
-		var metaBytes []byte
-		if err := rows.Scan(&p.Name, &p.Text, &p.Description, &p.Tags, &metaBytes, &p.Version); err != nil {
-			return nil, err
-		}
-		if err := json.Unmarshal(metaBytes, &p.Meta); err != nil {
+		if err := rows.Scan(&p.Name, &p.AuthorName, &p.Version, &p.Tags, &p.Description, &p.Text); err != nil {
 			return nil, err
 		}
 		result = append(result, &p)
@@ -61,32 +58,28 @@ func (s *Store) GetPrompts(ctx context.Context) ([]*Prompt, error) {
 // GetPrompt returns a single prompt by name, or ErrNotFound if it doesn't exist.
 func (s *Store) GetPrompt(ctx context.Context, name string) (*Prompt, error) {
 	row := s.pool.QueryRow(ctx,
-		`SELECT name, text, description, tags, meta, version FROM prompts WHERE name=$1`, name)
+		`SELECT p.name, a.name, p.version, p.tags, p.description, p.text
+		 FROM prompts p
+		 JOIN authors a ON a.id = p.author_id
+		 WHERE p.name = $1`, name)
 
 	var p Prompt
-	var metaBytes []byte
-	if err := row.Scan(&p.Name, &p.Text, &p.Description, &p.Tags, &metaBytes, &p.Version); err != nil {
+	if err := row.Scan(&p.Name, &p.AuthorName, &p.Version, &p.Tags, &p.Description, &p.Text); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
-	if err := json.Unmarshal(metaBytes, &p.Meta); err != nil {
-		return nil, err
-	}
 	return &p, nil
 }
 
-// CreatePrompt inserts a new prompt. Returns an error if the name already exists.
+// CreatePrompt inserts a new prompt. Returns an error if the name already exists
+// or the author does not exist.
 func (s *Store) CreatePrompt(ctx context.Context, p *Prompt) error {
-	metaBytes, err := json.Marshal(p.Meta)
-	if err != nil {
-		return err
-	}
-	_, err = s.pool.Exec(ctx,
-		`INSERT INTO prompts (name, text, description, tags, meta, version, card)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		p.Name, p.Text, p.Description, p.Tags, metaBytes, p.Version, p.Card)
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO prompts (name, author_id, version, tags, description, text, card)
+		 VALUES ($1, (SELECT id FROM authors WHERE name = $2), $3, $4, $5, $6, $7)`,
+		p.Name, p.AuthorName, p.Version, p.Tags, p.Description, p.Text, p.Card)
 	return err
 }
 

@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Search, X, Loader2, Plus } from 'lucide-react'
 import type { Prompt } from './types'
 import { fetchPrompts } from './api'
+
+function isSamePrompt(a: Prompt | null, b: Prompt): boolean {
+  return a?.name === b.name && a?.author_name === b.author_name
+}
 import Header from './components/Header'
 import TagBadge from './components/TagBadge'
 import PromptCard from './components/PromptCard'
@@ -52,6 +56,7 @@ export default function App() {
       if (!q) return true
       return (
         p.name.toLowerCase().includes(q) ||
+        p.author_name.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
         (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
       )
@@ -160,13 +165,11 @@ export default function App() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((prompt) => (
               <PromptCard
-                key={prompt.name}
+                key={`${prompt.author_name}/${prompt.name}`}
                 prompt={prompt}
-                selected={selected?.name === prompt.name}
+                selected={isSamePrompt(selected, prompt)}
                 onClick={() =>
-                  setSelected((prev) =>
-                    prev?.name === prompt.name ? null : prompt,
-                  )
+                  setSelected((prev) => isSamePrompt(prev, prompt) ? null : prompt)
                 }
               />
             ))}
