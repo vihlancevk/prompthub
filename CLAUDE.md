@@ -33,6 +33,8 @@ npm run preview     # Preview production build
 
 Run `make run` (backend on :8000) and `npm run dev` simultaneously — the Vite dev proxy handles CORS automatically. No need to configure CORS when using the dev proxy.
 
+The proxy target can be overridden with `BACKEND_URL` (default: `http://localhost:8000`). The browser-side API base URL can be overridden with `VITE_API_BASE_URL` (default: `/api`).
+
 ## Architecture
 
 ### Backend (Go)
@@ -69,7 +71,7 @@ Multi-page app in `frontend/src/` using React Router v6. Three routes:
 Key files:
 
 - **`App.tsx`** — Root component. Owns theme state (dark/light, persisted in `localStorage`). Renders `Header` and the `Routes` tree.
-- **`api.ts`** — HTTP client. Functions: `fetchPrompts`, `createPrompt`, `fetchCard`, `fetchSkills`, `createSkill`, `fetchSkillCard`. All use relative `/api` URLs.
+- **`api.ts`** — HTTP client. Functions: `fetchPrompts`, `createPrompt`, `fetchCard`, `fetchSkills`, `createSkill`, `fetchSkillCard`. Base URL is read from `VITE_API_BASE_URL` env var (default: `/api`).
 - **`types.ts`** — `Prompt` interface matching the backend JSON shape. `Skill` is a type alias for `Prompt` (identical shape).
 - **`pages/WelcomePage.tsx`** — Landing page with two navigation cards.
 - **`pages/PromptsPage.tsx`** and **`pages/SkillsPage.tsx`** — Thin config wrappers around `BrowsePage`.

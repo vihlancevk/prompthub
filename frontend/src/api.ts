@@ -1,6 +1,6 @@
 import type { Prompt, Skill } from './types'
 
-const BASE = '/api'
+const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 export async function fetchPrompts(): Promise<Prompt[]> {
   const res = await fetch(`${BASE}/prompts`)

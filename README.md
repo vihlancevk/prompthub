@@ -181,3 +181,10 @@ npm run build
 ```
 
 Run `make run` (backend on :8000) and `npm run dev` simultaneously — the Vite dev proxy handles CORS automatically.
+
+#### Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BACKEND_URL` | `http://localhost:8000` | Proxy target for `/api/*` requests during development |
+| `VITE_API_BASE_URL` | `/api` | API base URL used by the browser-side HTTP client |
